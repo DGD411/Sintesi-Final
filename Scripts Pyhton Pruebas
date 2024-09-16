@@ -1,0 +1,611 @@
+				Scripts python
+
+
+Eliminar
+import time, requests, ast, sys
+
+
+#FUNCIONA Eliminar MV con id y preguntar antes de hacerlo
+
+#---------------------------------------------------
+def leer_parametros():
+    with open("parametros.txt") as f:
+        content = f.read()
+    servidores = ast.literal_eval(content)
+    return servidores
+
+def ejecutar():
+    servidores = leer_parametros()
+    print("Servidores disponibles:")
+    for i, servidor in enumerate(servidores, 1):
+        print(f"{i}. {servidor}")
+    seleccion = input("Seleccione el servidor: ")
+    nombre_servidor = list(servidores.keys())[int(seleccion) - 1]
+    parametros = servidores[nombre_servidor]
+    print(f"\n{nombre_servidor}:\n")
+
+    proxmox_host = parametros.get("proxmox_host", "")
+    node = parametros.get("node", "")
+
+    px_headers = {
+        'Content-Type': 'application/json',
+        'Authorization': parametros.get("Authorization", "")
+    }
+
+    # Verificar que todos los parámetros necesarios estén presentes
+    if not all([proxmox_host, node, px_headers['Authorization']]):
+        print("Faltan parámetros en el archivo para el servidor seleccionado.")
+        exit()
+
+    proxmox_api_url = f"https://{proxmox_host}:8006/api2/json"
+
+    vm_list_url = f"{proxmox_api_url}/nodes/{node}/qemu"
+
+    response = requests.get(vm_list_url, headers=px_headers, verify=True)
+
+    # Verificar el resultado de la solicitud
+    if response.status_code == 200:
+        # Extraer las IDs de las máquinas virtuales de la respuesta JSON
+        vm_ids = sorted([vm['vmid'] for vm in response.json()['data']])
+        print("IDs de las máquinas virtuales:")
+        for vm_id in vm_ids:
+            print(vm_id)
+    else:
+        print(f"Error al obtener la lista de máquinas virtuales: {response.text}")
+
+    eliminar_url = f"{proxmox_api_url}/nodes/{node}/qemu/{vm_id}"
+    response = requests.delete(eliminar_url, headers=px_headers, verify=True)
+    response.raise_for_status()
+    print("Máquina virtual eliminada:", vm_id)
+
+if __name__ == "__main__":
+    if len(sys.argv) < 2:
+        print("Error con los parámetros recibidos")
+        sys.exit(1)
+
+    parametros = int(sys.argv[1])
+    vm_id = sys.argv[2]
+
+    ejecutar(parametros, vm_id)
+#---------------------------------------------------
+
+
+Encender
+#!/usr/bin/env python3
+import requests, time, sys, json, ast
+
+#FUNCIONA Encender MV con ID
+
+#---------------------------------------------------
+
+# Hacer conexion con Proxmox
+def leer_parametros():
+    with open("parametros.txt") as f:
+        content = f.read()
+    servidores = ast.literal_eval(content)
+    return servidores
+
+# Seleccion - Servidor
+def ejecutar(seleccion, vm):
+    resultado_hash = {'errors':[]}
+    servidores = leer_parametros()
+    
+    servers = []
+    for servidor in servidores:
+        servers.append(servidor)
+    resultado_hash['servers'] = servers
+
+    nombre_servidor = list(servidores.keys())[seleccion - 1]
+    parametros = servidores[nombre_servidor]
+
+    proxmox_host = parametros.get("proxmox_host", "")
+    node = parametros.get("node", "")
+
+    px_headers = {
+        'Content-Type': 'application/json',
+        'Authorization': parametros.get("Authorization", "")
+    }
+
+    # Verificar que todos los parámetros necesarios estén presentes
+    if not all([proxmox_host, node, px_headers['Authorization']]):
+        resultado_hash['errors'].append("Faltan parámetros en el archivo para el servidor seleccionado.")
+        exit()
+
+    proxmox_api_url = f"https://{proxmox_host}:8006/api2/json"
+
+    vm_list_url = f"{proxmox_api_url}/nodes/{node}/qemu"
+
+    response = requests.get(vm_list_url, headers=px_headers, verify=True)
+
+    # Verificar el resultado de la solicitud
+    if response.status_code == 200:
+        # Extraer las IDs de las máquinas virtuales de la respuesta JSON
+        vm_ids = sorted([vm['vmid'] for vm in response.json()['data']])
+        resultado_hash['vms'] = vm_ids        
+
+    else:
+        resultado_hash['errors'].append(response.text)
+
+    # Encender la máquina virtual
+    encender_mv_url = f"{proxmox_api_url}/nodes/{node}/qemu/{vm}/status/start"
+    encender = {
+        'node' : node, 
+        'vmid' : vm
+    }
+    response = requests.post(encender_mv_url, headers=px_headers, json=encender, verify=True)
+    try:
+        response.raise_for_status()
+    except:
+        resultado_hash['errors'].append(f"Error code {response.status_code}")
+        hash_map_as_json = json.dumps(resultado_hash)
+        print(hash_map_as_json)
+        exit()
+
+    resultado_hash['target'] = response.text
+
+    time.sleep(3)
+
+    status_url = f"{proxmox_api_url}/nodes/{node}/qemu/{vm}/status/current"
+    response = requests.get(status_url, headers=px_headers, verify=True)
+    
+    try:
+        response.raise_for_status()
+    except:
+        resultado_hash['errors'].append(f"Error code {response.status_code}")
+        hash_map_as_json = json.dumps(resultado_hash)
+        print(hash_map_as_json)
+        exit()
+
+    status = response.json()['data']['status']
+    
+    resultado_hash['status'] = status
+    hash_map_as_json = json.dumps(resultado_hash)
+    print(hash_map_as_json)
+
+if __name__ == "__main__":
+    if len(sys.argv) < 2:
+        resultado_hash = { 'errors' : ["Error con los parametros recibidos"] }
+        hash_map_as_json = json.dumps(resultado_hash)
+        print(hash_map_as_json)
+        sys.exit(1)
+
+    parametros = int(sys.argv[1])
+    vm_id = sys.argv[2]
+
+    ejecutar(parametros, vm_id)
+Apagar.
+import requests
+import time, sys, ast
+
+# Obtener la configuración de la conexión desde el archivo
+def leer_parametros():
+    with open("parametros.txt") as f:
+        content = f.read()
+    servidores = ast.literal_eval(content)
+    return servidores
+
+# Función para obtener la lista de máquinas virtuales en ejecución
+def obtener_maquinas_en_ejecucion(proxmox_api_url, node, px_headers):
+    vm_list_url = f"{proxmox_api_url}/nodes/{node}/qemu"
+    response = requests.get(vm_list_url, headers=px_headers, verify=True)
+    response.raise_for_status()
+    vm_data = response.json().get("data", [])
+    running_vms = [vm["vmid"] for vm in vm_data if vm.get("status") == "running"]
+    return running_vms
+
+# Función para apagar la máquina virtual
+def apagar_maquina_virtual(proxmox_api_url, node, vm_id, px_headers):
+    apagar_mv_url = f"{proxmox_api_url}/nodes/{node}/qemu/{vm_id}/status/shutdown"
+    apagar = {
+        'node': node,
+        'vmid': vm_id
+    }
+    response = requests.post(apagar_mv_url, headers=px_headers, json=apagar, verify=True)
+    response.raise_for_status()
+    print("Máquina virtual apagada:", response.text)
+
+# Función para detener forzadamente la máquina virtual si sigue en ejecución
+def detener_forzadamente_maquina_virtual(proxmox_api_url, node, vm_id, px_headers):
+    detener_forzadamente_url = f"{proxmox_api_url}/nodes/{node}/qemu/{vm_id}/status/stop"
+    apagar = {
+        'node': node,
+        'vmid': vm_id,
+    }
+    response = requests.post(detener_forzadamente_url, headers=px_headers, json=apagar, verify=True)
+    response.raise_for_status()
+    print("Máquina virtual detenida forzadamente:", response.text)
+
+# Función para obtener el estado actual de la máquina virtual
+def obtener_estado_maquina_virtual(proxmox_api_url, node, vm_id, px_headers):
+    status_url = f"{proxmox_api_url}/nodes/{node}/qemu/{vm_id}/status/current"
+    response = requests.get(status_url, headers=px_headers, verify=True)
+    response.raise_for_status()
+    return response.json()['data']['status']
+
+
+def ejecutar(vm_id):
+    # Leer los parámetros de la conexión
+    servidores = leer_parametros()
+    print("Servidores disponibles:")
+    for i, servidor in enumerate(servidores, 1):
+        print(f"{i}. {servidor}")
+    seleccion = input("Seleccione el servidor: ")
+    nombre_servidor = list(servidores.keys())[int(seleccion) - 1]
+    parametros = servidores[nombre_servidor]
+    print(f"\n{nombre_servidor}:\n")
+
+    proxmox_host = parametros.get("proxmox_host", "")
+    node = parametros.get("node", "")
+
+    px_headers = {
+        'Content-Type': 'application/json',
+        'Authorization': parametros.get("Authorization", "")
+    }
+
+    proxmox_api_url = f"https://{proxmox_host}:8006/api2/json"
+
+    # Verificar que todos los parámetros necesarios estén presentes
+    if not all([proxmox_host, node, px_headers['Authorization']]):
+        print("Faltan parámetros en el archivo para el servidor seleccionado.")
+        exit()
+
+    # Obtener y mostrar las máquinas virtuales en ejecución
+    maquinas_en_ejecucion = obtener_maquinas_en_ejecucion(proxmox_api_url, node, px_headers)
+    print("Máquinas virtuales en ejecución:")
+    for vm_id in maquinas_en_ejecucion:
+        print(vm_id)
+
+    # Apagar la máquina virtual seleccionada
+    apagar_maquina_virtual(proxmox_api_url, node, vm_id, px_headers)
+
+    # Esperar un tiempo antes de verificar el estado
+    time.sleep(10)
+
+    # Obtener el estado actual de la máquina virtual
+    estado = obtener_estado_maquina_virtual(proxmox_api_url, node, vm_id, px_headers)
+    print("Estado de la máquina virtual después del apagado:", estado)
+
+    # Si la máquina virtual sigue en ejecución, detenerla forzadamente
+    if estado == "running":
+        detener_forzadamente_maquina_virtual(proxmox_api_url, node, vm_id, px_headers)
+
+    # Obtener el estado actual de la máquina virtual después de detenerla forzadamente
+    estado = obtener_estado_maquina_virtual(proxmox_api_url, node, vm_id, px_headers)
+    print("Estado de la máquina virtual después de detenerla forzadamente:", estado)
+
+# Llamar a la función para ejecutar el código
+
+if __name__ == "__main__":
+    if len(sys.argv) < 2:
+        print("Error con los parámetros recibidos")
+        sys.exit(1)
+
+    parametros = int(sys.argv[1])
+    vm_id = sys.argv[2]
+
+    ejecutar(parametros, vm_id)
+
+CrearMV
+import requests, ast, sys, json
+
+
+
+def leer_parametros():
+    with open("parametros.txt") as f:
+        content = f.read()
+    servidores = ast.literal_eval(content)
+    return servidores
+
+def mostrar_menu():
+    print("Escoge el sistema operativo de Windows que deseas:")
+    print("1. Windows XP (wxp)")
+    print("2. Windows 2000 (w2k)")
+    print("3. Windows Server 2003 (w2k3)")
+    print("4. Windows Server 2008 (w2k8)")
+    print("5. Windows Vista (wvista)")
+    print("6. Windows 7 (win7)")
+    print("7. Windows 8 (win8)")
+    print("8. Windows 10 (win10)")
+    print("9. Windows 11 (win11)")
+
+def typeOsSelected(typeOS_seleccion, opcion): 
+    if typeOS_seleccion == "1" : 
+        mostrar_menu()
+
+        if opcion == '1':
+            print("Has seleccionado Windows XP (wxp).")
+            typeOS = 'wxp'
+            print(typeOS)
+        elif opcion == '2':
+            print("Has seleccionado Windows 2000 (w2k).")
+            typeOS = 'w2k'
+            print(typeOS)
+        elif opcion == '3':
+            print("Has seleccionado Windows Server 2003 (w2k3).")
+            typeOS = 'w2k3'
+            print(typeOS)
+        elif opcion == '4':
+            print("Has seleccionado Windows Server 2008 (w2k8).")
+            typeOS = 'w2k8'
+            print(typeOS)
+        elif opcion == '5':
+            print("Has seleccionado Windows Vista (wvista).")
+            typeOS = 'wvista'
+            print(typeOS)
+        elif opcion == '6':
+            print("Has seleccionado Windows 7 (win7).")
+            typeOS = 'win7'
+            print(typeOS)
+        elif opcion == '7':
+            print("Has seleccionado Windows 8 (win8).")
+            typeOS = 'win8'
+            print(typeOS)
+        elif opcion == '8':
+            print("Has seleccionado Windows 10 (win10).")
+            typeOS = 'win10'
+            print(typeOS)
+        elif opcion == '9':
+            print("Has seleccionado Windows 11 (win11).")
+            typeOS = 'win11'
+            print(typeOS)
+    else:
+        print("Escoge la version que deseas: ")
+        print("1. Linux 2.4 Kernel (l24)")
+        print("2. Linux 2.6 - 6.X Kernel (l26)")
+
+        if opcion == '1':
+            print("Has seleccionado Linux 2.4 Kernel (l24).")
+            typeOS = 'l24'
+            print(typeOS)
+        elif opcion == '2':
+            print("Has seleccionado Linux 2.6 - 6.X Kernel (l26).")
+            typeOS = 'l26'
+            print(typeOS)
+    
+    return typeOS
+
+
+def ejecutar(seleccion, typeOS_seleccion, opcion, name, memoryRAM, diskSize, numCPU) :
+    servidores = leer_parametros()
+    print("Servidores disponibles:")
+    for i, servidor in enumerate(servidores, 1):
+        print(f"{i}. {servidor}")
+    nombre_servidor = list(servidores.keys())[int(seleccion) - 1]
+    parametros = servidores[nombre_servidor]
+    print(f"\n{nombre_servidor}:\n")
+
+    proxmox_host = parametros.get("proxmox_host", "")
+    node = parametros.get("node", "")
+
+    px_headers = {
+    'Content-Type': 'application/json',
+    'Authorization': parametros.get("Authorization", "")
+    }
+
+    # Verificar que todos los parámetros necesarios estén presentes
+    if not all([proxmox_host, node, px_headers['Authorization']]):
+        print("Faltan parámetros en el archivo para el servidor seleccionado.")
+        exit()
+
+    proxmox_api_url = f"https://{proxmox_host}:8006/api2/json"
+
+    # Obtener el siguiente ID disponible para la máquina virtual
+    response = requests.get(f"{proxmox_api_url}/cluster/nextid", headers=px_headers, verify=True)
+    print("llego")
+    print("llego")
+
+    vm_id = response.json()['data']
+
+    print("Que sistema operativo desea utilizar: ")
+    print("1 - Windows")
+    print("2 - Linux")
+    
+
+    typeOS = typeOsSelected(typeOS_seleccion, opcion)
+        
+
+    # Crear la carga útil de la solicitud
+    if typeOS_seleccion == "1": 
+        payload = {
+            "vmid": vm_id,
+            "name": name,
+            "ostype": typeOS,
+            'bios': 'ovmf',
+            "ide0": f"local:{diskSize}",
+            "memory": memoryRAM,
+            "cores": numCPU,
+            "net0": "e1000,bridge=vmbr0,firewall=1"
+        }
+    elif typeOS_seleccion == "2":
+        payload = {
+            "vmid": vm_id,
+            "name": name,
+            "ostype": typeOS,
+            "scsi0": f"local:{diskSize}",
+            "memory": memoryRAM,
+            "cores": numCPU,
+            "net0": "virtio,bridge=vmbr0,firewall=1"
+        }
+
+    response = requests.post(f"{proxmox_api_url}/nodes/{node}/qemu", json=payload, headers=px_headers, verify=True)
+    print("llego")
+
+    #resultado_hash['action'] = "Creating virtual machine..."
+    #hash_map_as_json = json.dumps(resultado_hash)
+    #print(hash_map_as_json)
+
+if __name__ == "__main__":
+    if len(sys.argv) < 7:
+        resultado_hash = { 'errors' : ["Error con los parametros recibidos"] }
+        hash_map_as_json = json.dumps(resultado_hash)
+        print(hash_map_as_json)
+        sys.exit(1)
+
+    seleccion = int(sys.argv[1])
+    typeOs_seleccion = sys.argv[2]
+    opcion = sys.argv[3]
+    name = sys.argv[4]
+    memoryRAM = sys.argv[5]
+    diskSize = sys.argv[6]
+    numCPU = sys.argv[7]
+
+
+    ejecutar(seleccion, typeOs_seleccion, opcion, name, memoryRAM, diskSize, numCPU)
+
+
+Modificar
+import json, ast, requests, sys
+
+
+#FUNCIONA Modificar MV ya creada sin modificar disco 
+
+# Comprobar estado de la solicitud
+def comprobar_estado(response, resultado_hash):
+    try:
+        response.raise_for_status()
+    except:
+        resultado_hash['errors'].append(f"Error code {response.status_code}")
+        hash_map_as_json = json.dumps(resultado_hash)
+        print(hash_map_as_json)
+        exit()
+
+# Leer datos de conexion con proxmox
+def leer_parametros():
+    with open("parametros.txt") as f:
+        content = f.read()
+    servidores = ast.literal_eval(content)
+    return servidores
+
+# Seleccion - Servidor
+def ejecutar(seleccion, vm_id, newname, newmemoryram, newdisksize ,newcores):
+    resultado_hash = {'errors':[]}
+    servidores = leer_parametros()
+    
+    servers = []
+    for servidor in servidores:
+        servers.append(servidor)
+    resultado_hash['servers'] = servers
+
+    nombre_servidor = list(servidores.keys())[seleccion - 1]
+    parametros = servidores[nombre_servidor]
+
+    proxmox_host = parametros.get("proxmox_host", "")
+    node = parametros.get("node", "")
+
+    px_headers = {
+        'Content-Type': 'application/json',
+        'Authorization': parametros.get("Authorization", "")
+    }
+
+    # Verificar que todos los parámetros necesarios estén presentes
+    if not all([proxmox_host, node, px_headers['Authorization']]):
+        resultado_hash['errors'].append("Faltan parámetros en el archivo para el servidor seleccionado.")
+        exit()
+
+    proxmox_api_url = f"https://{proxmox_host}:8006/api2/json"
+
+    vm_list_url = f"{proxmox_api_url}/nodes/{node}/qemu"
+
+    response = requests.get(vm_list_url, headers=px_headers, verify=True)
+
+    # Verificar el resultado de la solicitud
+    if response.status_code == 200:
+        # Extraer las IDs de las máquinas virtuales de la respuesta JSON
+        vm_ids = sorted([vm['vmid'] for vm in response.json()['data']])
+        resultado_hash['vms'] = vm_ids        
+    else:
+        resultado_hash['errors'].append(response.text)
+
+    
+    url_config = f"{proxmox_api_url}/nodes/{node}/qemu/{vm_id}/config"
+    response = requests.get(url_config, headers=px_headers, verify=True)
+
+    if response.status_code == 200:
+        vm_config = response.json()
+        vm_config = vm_config['data']
+        resultado_hash['config'] = vm_config
+    else:
+        resultado_hash['errors'].append(response.text)
+
+    boot_order = vm_config['boot']    
+
+    boot_order = boot_order.replace('order=', '')
+    boot_order_list = boot_order.split(';')
+    nameDisk = boot_order_list[0]
+
+
+    for key, value in vm_config.items():
+        if key.startswith(nameDisk):
+           diskSize_def = value.split(',')[1].split('=')[1].split('\'')[0].strip('[]''G')
+           break
+    else:
+      print("No se encuentra ningun disco")
+
+    name_def = vm_config['name']
+    memoryRAM_def = vm_config['memory']
+    cores_def = vm_config['cores']
+
+    newname = newname if newname else name_def
+    newmemoryram = newmemoryram if newmemoryram else memoryRAM_def
+    newdisksize = newdisksize if newdisksize else diskSize_def
+    newcores = newcores if newcores else cores_def
+
+    new_config = {
+        'name': newname,
+        'memory': newmemoryram,
+        'cores': newcores,
+        'vmid': vm_id,
+        'node': node
+    }
+
+    # HACER LOS CAMBIOS
+    url = f"{proxmox_api_url}/nodes/{node}/qemu/{vm_id}/config"
+    response = requests.put(url, json=new_config, headers=px_headers, verify=True)
+
+    resize_data = {
+        'disk': nameDisk,
+        'vmid': vm_id,
+        'node': node,
+        'size': f'+{newdisksize}G'
+    }
+
+    url = f"{proxmox_api_url}/nodes/{node}/qemu/{vm_id}/resize"
+    response = requests.put(url, json=resize_data, headers=px_headers, verify=True)
+
+
+    # LISTAR LOS CAMBIOS HECHOS
+    url_config = f"{proxmox_api_url}/nodes/{node}/qemu/{vm_id}/config"
+    response = requests.get(url_config, headers=px_headers, verify=True)
+
+    if response.status_code == 200:
+        vm_config = response.json()
+        vm_config = vm_config['data']
+        resultado_hash['config_mod'] = vm_config
+
+    else:
+        resultado_hash['errors'].append(response.text)
+    
+
+if __name__ == "__main__":
+    if len(sys.argv) < 7:
+        resultado_hash = { 'errors' : ["Error con los parametros recibidos"] }
+        hash_map_as_json = json.dumps(resultado_hash)
+        print(hash_map_as_json)
+        sys.exit(1)
+
+    parametros = int(sys.argv[1])
+    vm_id = sys.argv[2]
+    name = sys.argv[3]
+    memoryram = sys.argv[4]
+    disksize = sys.argv[5]
+    cores = sys.argv[6]
+
+    ejecutar(parametros, vm_id, name, memoryram, disksize , cores)
+
+
+
+
+
+Parametros
+
+{Server:{'Servidor':'Server,'proxmox_host':'','node':,'Authorization':'TOKEN'},
