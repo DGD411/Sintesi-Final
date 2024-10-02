@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Degenitas SV - Login</title>
+    <link rel="stylesheet" href="css/index.css">
+</head>
+<body>
+    <div class="login-container">
+        <!-- Espacio para logo -->
+        <div class="logo">
+            <img src="logo.png" alt="Logo" />
+        </div>
+        
+        <!-- Formulario de login -->
+        <div class="login-box">
+            <input type="text" id="username" placeholder="Nombre de usuario">
+            <input type="password" id="password" placeholder="Contraseña">
+            <button onclick="login()">Iniciar Sesión</button>
+            <p class="register-link">
+                <a href="#" onclick="goToRegister()">¿No tienes una cuenta? Regístrate aquí</a>
+            </p>
+        </div>
+    </div>
+    
+    <script src="cordova.js"></script>
+    <script src="js/scriptregister.js"></script>
+</body>
+</html>
