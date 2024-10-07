@@ -1,4 +1,5 @@
 from fastapi import FastAPI, Depends, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 from psycopg2 import connect, sql
 from pydantic import BaseModel
 from passlib.context import CryptContext
@@ -32,7 +33,17 @@ class UserLogin(BaseModel):
     username: str
     password: str
 
+# Crear la instancia de la aplicación FastAPI
 app = FastAPI()
+
+# Configurar CORS
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Permitir todos los orígenes
+    allow_credentials=True,
+    allow_methods=["*"],  # Permitir todos los métodos
+    allow_headers=["*"],  # Permitir todos los headers
+)
 
 # Ruta de login
 @app.post("/login/")

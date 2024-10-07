@@ -2,29 +2,73 @@ function goToRegister() {
     window.location.href = 'register.html';
 }
 
-function login() {
-    // Lógica para login (ejemplo básico)
-    const username = document.getElementById('username').value;
+async function login() {
+    const username = document.getElementById('username').value; // Asegúrate de que este ID es correcto
     const password = document.getElementById('password').value;
 
     if (username && password) {
-        alert('Login exitoso');
-        // Aquí puedes agregar la lógica para autenticar
+        try {
+            // TODO CAMBIAR IP cuando se tengan
+            const response = await fetch('https://b771-37-223-72-245.ngrok-free.app/login/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    username: username, // Aquí se envía el username
+                    password: password
+                })
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                alert('Login exitoso: ' + data.message);
+                window.location.href = 'main.html';
+            } else {
+                alert('Error en el login: ' + data.detail);
+            }
+        } catch (error) {
+            console.error('Error en la petición:', error);
+            alert(error);
+        }
     } else {
         alert('Por favor, completa todos los campos');
     }
 }
 
-function register() {
-    // Lógica para registro (ejemplo básico)
-    const email = document.getElementById('email').value;
+async function register() {
+    const user = document.getElementById('user').value; // Asegúrate de que este ID es correcto
     const password = document.getElementById('password').value;
     const confirmPassword = document.getElementById('confirm-password').value;
 
-    if (email && password && confirmPassword) {
+    if (user && password && confirmPassword) {
         if (password === confirmPassword) {
-            alert('Registro exitoso');
-            // Aquí puedes agregar la lógica para el registro
+            try {
+                // TODO CAMBIAR IP cuando se tengan
+                const response = await fetch('https://b771-37-223-72-245.ngrok-free.app/register/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        username: user, // Aquí se envía el username
+                        password: password
+                    })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    alert('Registro exitoso: ' + data.message);
+                    window.location.href = 'main.html';
+                } else {
+                    alert('Error en el registro: ' + data.detail);
+                }
+            } catch (error) {
+                console.error('Error en la petición:', error);
+                alert('Hubo un error al intentar registrar el usuario');
+            }
         } else {
             alert('Las contraseñas no coinciden');
         }
