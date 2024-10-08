@@ -7,15 +7,22 @@
     <link rel="stylesheet" href="css/index.css">
 </head>
 <body>
-    <div class="register-container">
-        <div class="register-box">
-            <input type="user" id="user" placeholder="Nombre de usuario">
-            <input type="password" id="password" placeholder="Contraseña">
-            <input type="password" id="confirm-password" placeholder="Confirma tu contraseña">
-            <button onclick="register()">Registrarse</button>
-        </div>
-    </div>
+<!-- Flecha para volver a la página anterior -->
+<div class="back-arrow">
+    <a href="index.html">
+        &#8592; Volver
+    </a>
+</div>
 
-    <script src="js/scriptregister.js"></script>
+<div class="register-container">
+    <div class="register-box">
+        <input type="text" id="user" placeholder="Nombre de usuario">
+        <input type="password" id="password" placeholder="Contraseña">
+        <input type="password" id="confirm-password" placeholder="Confirma tu contraseña">
+        <button onclick="register()">Registrarse</button>
+    </div>
+</div>
+
+<script src="js/scriptregister.js"></script>
 </body>
 </html>

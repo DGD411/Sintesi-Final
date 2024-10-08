@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Crear MV</title>
+    <link rel="stylesheet" href="css/stylesmv.css">
+</head>
+<body>
+<div class="create-mv-container">
+    <!-- Flecha para volver atrás -->
+    <div class="back-button">
+        <a href="main.html" class="back-arrow">&larr;</a>
+    </div>
+
+    <h1>Crear Máquina Virtual</h1>
+
+    <form action="/crearMV" method="post">
+        <!-- Campo para el nombre del servidor -->
+        <label for="server-name">Nombre del servidor:</label>
+        <input type="text" id="server-name" name="server-name" required>
+
+        <!-- Campo para el nombre de la máquina virtual -->
+        <label for="vm-name">Nombre de la máquina virtual:</label>
+        <input type="text" id="vm-name" name="vm-name" required>
+
+        <!-- Campo para la memoria RAM -->
+        <label for="ram-size">Memoria RAM (GB):</label>
+        <input type="number" id="ram-size" name="ram-size" min="1" required>
+
+        <!-- Campo para el espacio del disco -->
+        <label for="disk-size">Espacio del disco (GB):</label>
+        <input type="number" id="disk-size" name="disk-size" min="1" required>
+
+        <!-- Campo para los núcleos de la CPU -->
+        <label for="cpu-cores">Núcleos de la CPU:</label>
+        <input type="number" id="cpu-cores" name="cpu-cores" min="1" required>
+
+        <!-- Botón para crear la máquina virtual -->
+        <button type="submit">Crear MV</button>
+    </form>
+</div>
+
+<script src="js/crearMV.js"></script>
+</body>
+</html>
