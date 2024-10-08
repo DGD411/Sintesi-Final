@@ -73,7 +73,3 @@ function turnOff(vmid) {
     alert(`Apagando item con VMID: ${vmid}`);
     // Aquí puedes agregar la lógica para apagar el item
 }
-
-function CrearMV() {
-    window.location.href = "crearMV.html";
-}

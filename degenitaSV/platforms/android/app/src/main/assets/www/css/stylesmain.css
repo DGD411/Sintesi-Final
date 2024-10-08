@@ -1,10 +1,25 @@
+/* Reinicio de estilos básicos para eliminar posibles márgenes o padding */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html, body {
+    height: 100%;
+    background-color: #222; /* Fondo oscuro sin bordes */
+}
+
+/* Estilo principal */
 .main-container {
     display: flex;
     flex-direction: column;
     justify-content: center;
     align-items: center;
-    height: 100vh;
+    min-height: 100vh;
+    background-color: #222; /* Fondo oscuro */
     color: #fff;
+    padding: 20px; /* Para asegurar que haya espacio alrededor */
 }
 
 .header {
@@ -13,14 +28,37 @@
 }
 
 .header img {
-    width: 150px;
+    width: 120px; /* Ajuste del tamaño del logo */
+    margin-bottom: 10px;
+}
+
+.button-container {
+    margin-bottom: 20px; /* Separación del botón y la lista */
+}
+
+.button-container button {
+    background-color: #ff6600; /* Naranja vibrante */
+    color: #fff;
+    border: none;
+    padding: 14px 28px;
+    font-size: 18px;
+    border-radius: 12px;
+    cursor: pointer;
+    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.3);
+    transition: background-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.button-container button:hover {
+    background-color: #e65c00;
+    box-shadow: 0px 6px 12px rgba(0, 0, 0, 0.4);
 }
 
 .items-container {
     background-color: #333;
     padding: 20px;
-    border-radius: 8px;
-    width: 400px;
+    border-radius: 12px;
+    width: 100%;
+    max-width: 400px;
     box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.5);
 }
 
@@ -31,28 +69,32 @@ ul {
 
 li.item {
     background-color: #444;
-    padding: 10px;
-    margin: 10px 0;
-    border-radius: 4px;
-    box-shadow: 0px 0px 5px rgba(0, 0, 0, 0.5);
+    padding: 15px;
+    margin: 15px 0;
+    border-radius: 8px;
+    box-shadow: 0px 2px 8px rgba(0, 0, 0, 0.3);
+    display: flex;
+    flex-direction: column;
 }
 
 li.item strong {
     color: #ff6600;
+    font-size: 16px;
+    margin-bottom: 5px;
 }
 
-.dropdown {
-    position: relative;
-    display: inline-block;
+li.item p {
+    font-size: 14px;
+    color: #ccc;
 }
 
 .dropdown-content {
-    display: none;
-    position: absolute;
+    display: none; /* Ocultar por defecto */
     background-color: #f9f9f9;
     min-width: 160px;
     box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
     z-index: 1;
+    position: relative; /* Cambiado a relative para mantener la posición dentro del contenedor */
 }
 
 .dropdown-content button {
@@ -71,14 +113,16 @@ li.item strong {
 }
 
 .dropdown-btn {
-    background-color: #4CAF50; /* Verde */
+    align-self: flex-end;
+    background-color: #4CAF50; /* Color del botón de la flecha */
     color: white;
-    padding: 10px;
+    padding: 8px;
     border: none;
     cursor: pointer;
+    border-radius: 8px;
+    transition: background-color 0.3s ease;
 }
 
 .dropdown-btn:hover {
     background-color: #45a049;
 }
-
