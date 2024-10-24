@@ -9,7 +9,7 @@ async function login() {
     if (username && password) {
         try {
             // TODO CAMBIAR IP cuando se tengan
-            const response = await fetch(' https://5cb1-37-223-72-245.ngrok-free.app/login/', {
+            const response = await fetch(' https://f7df-79-117-174-115.ngrok-free.app/login/', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -46,7 +46,7 @@ async function register() {
         if (password === confirmPassword) {
             try {
                 // TODO CAMBIAR IP cuando se tengan
-                const response = await fetch('https://5cb1-37-223-72-245.ngrok-free.app/register/', {
+                const response = await fetch('https://f7df-79-117-174-115.ngrok-free.app/register/', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
