@@ -15,21 +15,17 @@
 
     <h1>Crear Máquina Virtual</h1>
 
-    <form action="/crearMV" method="post">
-        <!-- Campo para el nombre del servidor -->
-        <label for="server-name">Nombre del servidor:</label>
-        <input type="text" id="server-name" name="server-name" required>
-
+    <form>
         <!-- Campo para el nombre de la máquina virtual -->
         <label for="vm-name">Nombre de la máquina virtual:</label>
         <input type="text" id="vm-name" name="vm-name" required>
 
         <!-- Campo para la memoria RAM -->
-        <label for="ram-size">Memoria RAM (GB):</label>
+        <label for="ram-size">Memoria RAM (MB):</label>
         <input type="number" id="ram-size" name="ram-size" min="1" required>
 
         <!-- Campo para el espacio del disco -->
-        <label for="disk-size">Espacio del disco (GB):</label>
+        <label for="disk-size">Espacio del disco (MB):</label>
         <input type="number" id="disk-size" name="disk-size" min="1" required>
 
         <!-- Campo para los núcleos de la CPU -->
@@ -41,6 +37,6 @@
     </form>
 </div>
 <script src="cordova.js"></script>
-<script src="js/crearMV.js"></script>
+<script src="js/crearMV-test.js"></script>
 </body>
 </html>

@@ -22,11 +22,17 @@ async function login() {
 
             const data = await response.json();
 
-            if (response.ok) {
+            // Verificar el statusCode en el cuerpo de la respuesta
+            if (response.ok && data.statusCode === 200) {
                 alert('Login exitoso: ' + data.message);
                 window.location.href = 'main.html';
             } else {
-                alert('Error en el login: ' + data.detail);
+                // Si hay un error, se muestra el error correspondiente
+                if (data.error) {
+                    alert('Error en el login: ' + data.error);
+                } else {
+                    alert('Error desconocido en el login');
+                }
             }
         } catch (error) {
             console.error('Error en la petición:', error);
@@ -36,6 +42,7 @@ async function login() {
         alert('Por favor, completa todos los campos');
     }
 }
+
 
 async function register() {
     const user = document.getElementById('user').value; // Asegúrate de que este ID es correcto
@@ -59,15 +66,21 @@ async function register() {
 
                 const data = await response.json();
 
-                if (response.ok) {
+                // Verificar el statusCode en el cuerpo de la respuesta
+                if (response.ok && data.statusCode === 201) {
                     alert('Registro exitoso: ' + data.message);
                     window.location.href = 'main.html';
                 } else {
-                    alert('Error en el registro: ' + data.detail);
+                    // Si hay un error, se muestra el error correspondiente
+                    if (data.error) {
+                        alert('Error en el registro: ' + data.error);
+                    } else {
+                        alert('Error desconocido en el registro');
+                    }
                 }
             } catch (error) {
                 console.error('Error en la petición:', error);
-                alert('Hubo un error al intentar registrar el usuario');
+                alert('Hubo un error al intentar registrar el usuario: ' + error.message);
             }
         } else {
             alert('Las contraseñas no coinciden');
